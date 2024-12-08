@@ -29,10 +29,25 @@ yarn-error.*
 .DS_Store
 *.pem
 
+# Android
+android/.gradle/
+android/app/build/
+android/gradle-wrapper.jar
+android/gradle-wrapper.properties
+*.iml
+.idea/
+
+# iOS
+ios/Pods/
+ios/build/
+ios/DerivedData/
+
 # local env files
 .env*.local
 
 # typescript
 *.tsbuildinfo
 
-app-example
+app/Domains.tsx
+
+/packager-cache/
