@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Button, StyleSheet, ActivityIndicator, FlatList } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-// import { RootStackParamList } from '../navigation/StackNavigator';
 import { RootStackParamList } from '../navigation/StackNavigator'; 
 import axios from 'axios';
 import { BASE_URL } from '../Domains';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import UserElement from '../elements/UserElement';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -72,10 +72,7 @@ const HomeScreen = ({ navigation }: Props) => {
         data={users}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <View style={styles.userItem}>
-            <Text style={styles.userName}>{item.username}</Text>
-            <Text style={styles.userEmail}>{item.email}</Text>
-          </View>
+          <UserElement user={item} navigation={navigation} />
         )}
       />
       <Button 

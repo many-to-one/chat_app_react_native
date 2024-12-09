@@ -26,14 +26,17 @@ const LoginScreen = ({ navigation }: Props) => {
 
     try {
       setLoading(true);
-      console.log('***handleLogin***', username, password)
+      // console.log('***handleLogin***', username, password)
       const response = await axios.post(
         `${BASE_URL}/auth/login`,
         `username=${username}&password=${password}`,
         { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
       );
     //   Alert.alert('Success', 'Login successful');
+      console.log('***response***', response)
       
+      await AsyncStorage.setItem('myId', response.data.id);
+      await AsyncStorage.setItem('myName', response.data.username);
       await AsyncStorage.setItem('access_token', response.data.access_token);
       await AsyncStorage.setItem('refresh_token', response.data.refresh_token);
 
