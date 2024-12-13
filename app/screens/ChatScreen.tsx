@@ -1,4 +1,5 @@
 import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, StyleSheet, FlatList } from "react-native";
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/StackNavigator'; 
 import { RouteProp } from "@react-navigation/native";
@@ -18,7 +19,9 @@ type MyUser = {
 }
 
 type MessageBase = {
+    user_id: number;
     message: string;
+    read: boolean;
   };
   
 type ChatBase = {
@@ -26,7 +29,7 @@ type ChatBase = {
   sender_id: number;
   receiver_id: number;
   message: string;
-  chat_messages: MessageBase[];
+  messages: MessageBase[];
 };
 
 const ChatScreen = ({route}: Props) => {
@@ -57,8 +60,11 @@ const ChatScreen = ({route}: Props) => {
 
 
     useEffect(() => {
+      if (myId !== 0) { 
+        // console.log('******inside useEff my Id *****', myId)
         fetchMessages();
-    }, [])
+    }
+    }, [myId])
 
         const fetchMessages = async () => {
 
@@ -83,13 +89,10 @@ const ChatScreen = ({route}: Props) => {
                 },
               });
             const chatData: ChatBase[] = response.data;
-            // const chatData = response.data.chat_messages;
 
             console.log('chatData', response.data)
     
-            const loadedMessages: MessageBase[] = chatData.flatMap(chat => chat.chat_messages);
-    
-            // setMessages(loadedMessages);
+            const loadedMessages: MessageBase[] = chatData.flatMap(chat => chat.messages);
             setMessages((prevMessages) => [...prevMessages, ...loadedMessages]);
           } catch (error) {
             console.error('Error fetching messages:', error);
@@ -101,12 +104,6 @@ const ChatScreen = ({route}: Props) => {
     useEffect(() => {
         ws.onmessage = (event) => {
             console.log('onmessage', event.data)
-        //   const receivedData: ChatBase = JSON.parse(event.data);
-          
-        //   // Extract the chat_messages from the received data
-        //   const incomingMessages: MessageBase[] = receivedData.chat_messages;
-    
-        //   setMessages((prevMessages) => [...prevMessages, ...incomingMessages]);
         };
     
         return () => ws.close(); // Clean up the WebSocket connection on unmount
@@ -121,7 +118,11 @@ const ChatScreen = ({route}: Props) => {
           sender_id: myId, // Current user ID (make this dynamic as needed)
           receiver_id: userId, // Receiver ID (can be dynamic)
           message: messageText,
-          chat_messages: [{ message: messageText }], // Message list
+          messages: [{
+            user_id: myId,
+            message: messageText, 
+            read: false,
+          }], // Message list
         };
     
         // Send message to the WebSocket server
@@ -129,12 +130,17 @@ const ChatScreen = ({route}: Props) => {
     
         // Add to local state as a sent message
         const newMessage: MessageBase = {
+          user_id: myId,
           message: messageText,
+          read: false,
         };
     
         setMessages((prevMessages) => [...prevMessages, newMessage]);
         setMessageText('');
+        // console.log('** messages **', messages)
       };
+
+      console.log('** messages **', messages)
 
       return (
         <KeyboardAvoidingView
@@ -145,10 +151,22 @@ const ChatScreen = ({route}: Props) => {
             data={messages}
             keyExtractor={(item, index) => index.toString()}
             renderItem={({ item }) => (
-              <View style={styles.messageContainer}>
+              <View style={
+                item.user_id === myId ? styles.myMessageContainer : styles.receiverMessageContainer
+                }>
                 <Text style={styles.messageText}>{item.message}</Text>
+                { item.user_id === myId && 
+                  <Icon
+                    name={item.read ? 'check' : 'check'}
+                    size={14}
+                    color={item.read ? 'green' : 'gray'}
+                    style={styles.messageIcon}
+                  />
+                }
               </View>
             )}
+            contentContainerStyle={styles.contentContainer}
+            keyboardShouldPersistTaps="handled"
           />
     
           <View style={styles.inputContainer}>
@@ -170,8 +188,13 @@ const ChatScreen = ({route}: Props) => {
       container: {
         flex: 1,
         backgroundColor: '#F5F5F5',
+        padding: 5,
       },
-      messageContainer: {
+      contentContainer: {
+        flexGrow: 1, // Ensures that FlatList grows and allows scrolling
+        paddingBottom: 10,
+      },
+      myMessageContainer: {
         padding: 10,
         marginVertical: 5,
         borderRadius: 8,
@@ -179,8 +202,20 @@ const ChatScreen = ({route}: Props) => {
         alignSelf: 'flex-end',
         maxWidth: '80%',
       },
+      receiverMessageContainer: {
+        padding: 10,
+        marginVertical: 5,
+        borderRadius: 8,
+        backgroundColor: '#E1E1E1',
+        alignSelf: 'flex-start',
+        maxWidth: '80%',
+      },
       messageText: {
         fontSize: 16,
+      },
+      messageIcon: {
+        // marginLeft: 10,
+        alignSelf: 'flex-end',
       },
       inputContainer: {
         flexDirection: 'row',

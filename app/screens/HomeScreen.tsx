@@ -29,6 +29,8 @@ const HomeScreen = ({ navigation }: Props) => {
     const fetchUsers = async () => {
 
       const accessToken = await AsyncStorage.getItem('access_token');
+      const myIdString = await AsyncStorage.getItem('myId');
+      const myId = myIdString ? parseInt(myIdString, 10) : 0; // Default to 0 if myId is null
 
       try {
         setLoading(true);
@@ -37,7 +39,11 @@ const HomeScreen = ({ navigation }: Props) => {
             'Authorization': `Bearer ${accessToken}`, // Attach the token in the request header
           },
         });
-        setUsers(response.data);
+
+        const filteredUsers = response.data.filter((user: User) => user.id !== myId);
+        setUsers(filteredUsers);
+
+        // console.log('fetchUsers', response.data)
       } catch (error: any) {
         setError(error.message || 'Something went wrong.');
       } finally {
